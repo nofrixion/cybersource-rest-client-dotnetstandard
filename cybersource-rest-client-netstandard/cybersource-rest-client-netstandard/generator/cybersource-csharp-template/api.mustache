@@ -307,6 +307,16 @@ namespace {{packageName}}.{{apiPackage}}
                 logger.Debug($"HTTP Request Body :\n{localVarPostBody}");
             }
             {{/bodyParam}}
+            {{^bodyParam}}
+            if (Method.{{httpMethod}} == Method.POST)
+            {
+                localVarPostBody = "{}";
+            }
+            else
+            {
+                localVarPostBody = null;
+            }
+            {{/bodyParam}}
 
             {{#authMethods}}
             // authentication ({{name}}) required
@@ -379,7 +389,7 @@ namespace {{packageName}}.{{apiPackage}}
         {
             logger.Debug("CALLING API \"{{operationId}}Async\" STARTED");
             {{#returnType}}ApiResponse<{{{returnType}}}> localVarResponse = await {{operationId}}AsyncWithHttpInfo({{#allParams}}{{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}});
-            logger.Debug("CALLING API \"{{operationId}}Async\" STARTED");
+            logger.Debug("CALLING API \"{{operationId}}Async\" ENDED");
             return localVarResponse.Data;{{/returnType}}{{^returnType}}await {{operationId}}AsyncWithHttpInfo({{#allParams}}{{paramName}}{{#hasMore}}, {{/hasMore}}{{/allParams}});{{/returnType}}
 
         }
@@ -480,6 +490,16 @@ namespace {{packageName}}.{{apiPackage}}
             else
             {
                 logger.Debug($"HTTP Request Body :\n{localVarPostBody}");
+            }
+            {{/bodyParam}}
+            {{^bodyParam}}
+            if (Method.{{httpMethod}} == Method.POST)
+            {
+                localVarPostBody = "{}";
+            }
+            else
+            {
+                localVarPostBody = null;
             }
             {{/bodyParam}}
 

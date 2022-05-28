@@ -12,7 +12,12 @@ namespace AuthenticationSdk.util
         private static Dictionary<string, string> authenticationTags = new Dictionary<string, string>();
 
         public LogUtility()
-        { }
+        {
+            if (!loaded)
+            {
+                LoadSensitiveDataConfiguration();
+            }
+        }
 
         /// <summary>
         /// mutex to ensure that the operation is thread safe
@@ -28,11 +33,6 @@ namespace AuthenticationSdk.util
         {
             lock(mutex)
             {
-                if (loaded)
-                {
-                    return;
-                }
-
                 sensitiveTags.Clear();
                 authenticationTags.Clear();
 
@@ -45,11 +45,6 @@ namespace AuthenticationSdk.util
 
         public string MaskSensitiveData(string str)
         {
-            if (!loaded)
-            {
-                LoadSensitiveDataConfiguration();
-            }
-
             try
             {
                 foreach (KeyValuePair<string, string> tag in sensitiveTags)

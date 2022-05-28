@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.1.7-pre</Version>
-    <Authors>CyberSource and NoFrixion</Authors>
+    <Version>0.0.1.7</Version>
+    <Authors>CyberSource</Authors>
     <Product>Authentication_SDK</Product>
     <Description />
     <Copyright>Copyright © 2022</Copyright>
