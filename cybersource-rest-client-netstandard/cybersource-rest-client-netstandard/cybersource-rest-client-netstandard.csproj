@@ -3,12 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>CyberSource</RootNamespace>
-    <Version>0.0.1.15</Version>
-    <Authors>CyberSource</Authors>
+    <Version>0.0.1.18-pre</Version>
+    <Authors>CyberSource and NoFrixion</Authors>
     <Company>CyberSource</Company>
     <Description>A library generated from a Swagger doc</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>CyberSource.Rest.Client.NetStandard</PackageId>
+    <PackageProjectUrl>https://github.com/nofrixion/cybersource-rest-client-dotnetstandard</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/nofrixion/cybersource-rest-client-dotnetstandard</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
