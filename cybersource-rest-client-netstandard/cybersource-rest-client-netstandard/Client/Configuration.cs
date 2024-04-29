@@ -97,7 +97,6 @@ namespace CyberSource.Client
 
             TempFolderPath = tempFolderPath;
             DateTimeFormat = dateTimeFormat;
-            Timeout = timeout;
             MerchantConfigDictionaryObj = merchConfigDictObj;
         }
 
@@ -148,13 +147,7 @@ namespace CyberSource.Client
         /// <value>Timeout.</value>
         public int Timeout
         {
-            get { return ApiClient.RestClient.Timeout; }
-
-            set
-            {
-                if (ApiClient != null)
-                    ApiClient.RestClient.Timeout = value;
-            }
+            get { return ApiClient.RestClient.Options.MaxTimeout; }
         }
 
         /// <summary>
