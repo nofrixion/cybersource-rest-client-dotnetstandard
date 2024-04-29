@@ -41,14 +41,14 @@ namespace CyberSource.Client
         /// Allows for extending request processing for <see cref="ApiClient"/> generated code.
         /// </summary>
         /// <param name="request">The RestSharp request object</param>
-        partial void InterceptRequest(IRestRequest request);
+        partial void InterceptRequest(RestRequest request);
 
         /// <summary>
         /// Allows for extending response processing for <see cref="ApiClient"/> generated code.
         /// </summary>
         /// <param name="request">The RestSharp request object</param>
         /// <param name="response">The RestSharp response object</param>
-        partial void InterceptResponse(IRestRequest request, IRestResponse response);
+        partial void InterceptResponse(RestRequest request, RestResponse response);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiClient" /> class
@@ -207,7 +207,7 @@ namespace CyberSource.Client
             // add file parameter, if any
             foreach(var param in fileParams)
             {
-                request.AddFile(param.Value.Name, param.Value.Writer, param.Value.FileName, param.Value.ContentLength, param.Value.ContentType);
+                request.AddFile(param.Value.Name, param.Value.GetFile, param.Value.FileName, param.Value.ContentType);
             }
 
             if (postBody != null) // http body (model or byte[]) parameter
@@ -263,7 +263,7 @@ namespace CyberSource.Client
             }
 
             //initiate a HttpWebRequest object
-            HttpWebRequest requestT = (HttpWebRequest)WebRequest.Create(Uri.EscapeUriString("https://" + RestClient.BaseUrl.Host + path));
+            HttpWebRequest requestT = (HttpWebRequest)WebRequest.Create(Uri.EscapeUriString("https://" + RestClient.Options.BaseUrl.Host + path));
             requestT.UserAgent = Configuration.UserAgent;
 
             if (Configuration.Proxy != null)
@@ -334,7 +334,6 @@ namespace CyberSource.Client
         {
             //declared separately to handle both regular call and download file calls
             int httpResponseStatusCode;
-            IList<Parameter> httpResponseHeaders = null;
             string httpResponseData = string.Empty;
 
             LogUtility logUtility = new LogUtility();
@@ -356,17 +355,17 @@ namespace CyberSource.Client
                     path, method, queryParams, postBody, headerParams, formParams, fileParams,
                     pathParams, contentType);
 
-                // set timeout
-                RestClient.Timeout = Configuration.Timeout;
-                // set user agent
-                RestClient.UserAgent = Configuration.UserAgent;
-            
-                RestClient.ClearHandlers();
+                // Reinitialise client
+                var clientOptions = new RestClientOptions(RestClient.Options.BaseUrl)
+                {
+                    MaxTimeout = Configuration.Timeout,
+                    UserAgent = Configuration.UserAgent
+                };
 
                 if (Configuration.Proxy != null)
                 {
-                    RestClient.Proxy = Configuration.Proxy;
-                }            
+                    clientOptions.Proxy = Configuration.Proxy;
+                }       
                 
                 // Adding Client Cert
                 if(Configuration.MerchantConfigDictionaryObj.ContainsKey("enableClientCert") && Equals(bool.Parse(Configuration.MerchantConfigDictionaryObj["enableClientCert"]), true))
@@ -377,8 +376,10 @@ namespace CyberSource.Client
                     string fileName = Path.Combine(clientCertDirectory, clientCertFile);
                     // Importing Certificates
                     var certificate = new X509Certificate2(fileName, clientCertPassword);
-                    RestClient.ClientCertificates = new X509CertificateCollection { certificate };
+                    clientOptions.ClientCertificates = new X509CertificateCollection { certificate };
                 }
+            
+                RestClient = new RestClient(clientOptions);     
 
                 // Logging Request Headers
                 var headerPrintOutput = new StringBuilder();
@@ -461,10 +462,13 @@ namespace CyberSource.Client
                 }
 
                 //setting the generic response with response headers
+                var newResponseHeaders = new List<HeaderParameter>();
                 foreach (var header in responseT.Headers)
                 {
-                    response.Headers.Add(new Parameter(header.ToString(), string.Join(",", responseT.Headers.GetValues(header.ToString()).ToArray()), ParameterType.HttpHeader));
+                    newResponseHeaders.Add(new HeaderParameter(header.ToString(), string.Join(",", responseT.Headers.GetValues(header.ToString()).ToArray())));
                 }
+                
+                response.Headers = newResponseHeaders;
 
                 //setting the generic RestResponse which is returned to the calling class
                 response.StatusCode = responseT.StatusCode;
@@ -486,7 +490,7 @@ namespace CyberSource.Client
 
             // Logging Response Headers
             httpResponseStatusCode = (int)response.StatusCode;
-            httpResponseHeaders = response.Headers;
+            var httpResponseHeaders = response.Headers;
             httpResponseData = response.Content;
 
             logger.Debug($"HTTP Response Status Code: {httpResponseStatusCode}");
@@ -566,7 +570,7 @@ namespace CyberSource.Client
                 }
 
             InterceptRequest(request);
-            var response = await RestClient.ExecuteTaskAsync(request);
+            var response = await RestClient.ExecuteAsync(request);
             InterceptResponse(request, response);
 
             // Logging Response Headers
@@ -676,9 +680,9 @@ namespace CyberSource.Client
         /// <param name="response">The HTTP response.</param>
         /// <param name="type">Object type.</param>
         /// <returns>Object representation of the JSON string.</returns>
-        public object Deserialize(IRestResponse response, Type type)
+        public object Deserialize(RestResponse response, Type type)
         {
-            IList<Parameter> headers = response.Headers;
+            var headers = response.Headers;
             if (type == typeof(byte[])) // return byte array
             {
                 return response.RawBytes;
@@ -957,12 +961,15 @@ namespace CyberSource.Client
 
             //Set the Configuration
             Configuration.DefaultHeader = authenticationHeaders;
-            RestClient.BaseUrl = new Uri("https://" + merchantConfig.HostName);
+
+            var restClientOptions = new RestClientOptions(new Uri("https://" + merchantConfig.HostName));
 
             if (Configuration.Proxy != null)
             {
-                RestClient.Proxy = Configuration.Proxy;
+                restClientOptions.Proxy = Configuration.Proxy;
             }
+            
+            RestClient = new RestClient(restClientOptions);
         }
     }
 }
